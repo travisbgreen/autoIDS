@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Logfiles{% endblock %}
+{% block body %}
+<p>
+	List of pcap files that have been uploaded. Go <a href="/">here</a> to upload a new pcap.
+</p>
+<p>
+	<table>
+		{% for file in files %}
+		<tr>
+			<td>
+				<a href="/output/{{ file[4] }}">{{ file[0] }}</a>
+			</td>
+			<td>
+				{% if file[2] %}
+				Analysis complete
+				{% else %}
+				<span style="color:green;">In progress...</span>
+				{% endif %}
+			</td>
+			<td>
+				Hash: {{ file[4] }}
+			</td>
+			<td>
+				Uploaded: {{ file[5]|timestamp_to_time|datetimeformat('%a, %B %d %H:%M:%S') }}
+			</td>
+		</tr>
+		{% endfor %}
+	</table>
+</p>
+<p>
+	{% if page > 1 %}
+	<a href='/output?page={{ page-1 }}'>Previous page</a>
+	{% endif %}
+	<a href='/output?page={{ page+1 }}'>Next page</a>
+</p>
+{% endblock %}
