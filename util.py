@@ -21,6 +21,6 @@ if not os.path.exists(LOG_FOLDER): # create the folder to hold logs and output m
 if not os.path.exists(DATABASE): # set up the database if it does not exist
 	db = sqlite3.connect(DATABASE)
 	c = db.cursor()
-	c.execute('CREATE TABLE pcaps (name text, file text, status boolean, logpath text, md5 text, uploaded int)')
+	c.execute('CREATE TABLE pcaps (name text, file text, status int, logpath text, md5 text, uploaded int)')
 	db.commit()
 	db.close()

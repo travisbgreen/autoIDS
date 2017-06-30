@@ -6,23 +6,39 @@
 </p>
 <p>
 	<table>
+		<tr>
+			<td>
+				<b>Filename</b>
+			</td>
+			<td>
+				<b>Status</b>
+			</td>
+			<td>
+				<b>Hash</b>
+			</td>
+			<td>
+				<b>Uploaded</b>
+			</td>
+		</tr>
 		{% for file in files %}
 		<tr>
 			<td>
 				<a href="/output/{{ file[4] }}">{{ file[0] }}</a>
 			</td>
 			<td>
-				{% if file[2] %}
+				{% if file[2] == 1 %}
 				Analysis complete
+				{% elif file[2] == -1 %}
+				<span style="color:red;">Failed</span>
 				{% else %}
 				<span style="color:green;">In progress...</span>
 				{% endif %}
 			</td>
 			<td>
-				Hash: {{ file[4] }}
+				{{ file[4] }}
 			</td>
 			<td>
-				Uploaded: {{ file[5]|timestamp_to_time|datetimeformat('%a, %B %d %H:%M:%S') }}
+				{{ file[5] }}
 			</td>
 		</tr>
 		{% endfor %}

@@ -46,16 +46,16 @@ def upload():
 		if existing: # if there is not an empty array
 			flash('that file hash is already in the database!')
 			return redirect('/output/'+filehash) # redirect to the page for the existing file
-		c.execute('INSERT INTO pcaps VALUES (?,?,?,?,?,?)',(origfilename,filename,False,'',filehash,time.time())) # otherwise store the new pcap data into the database
+		c.execute('INSERT INTO pcaps VALUES (?,?,?,?,?,?)',(origfilename,filename,0,'',filehash,time.time())) # otherwise store the new pcap data into the database
 		db.commit() # save the db
 		db.close()
-		filequeue.put((filename,engine,filehash)) # add the info for the new file to the processing queue
+		filequeue.put((filename,engine,filehash,path)) # add the info for the new file to the processing queue
 		flash('processing pcap in progress... wait a little while and then refresh') # give the user a message about the status
 		return redirect('/output/'+filehash) # redirect to the page for the unfinished sample
 
 @app.route('/output') # displays a list of the pcaps submitted to the system
 def logfilelist():
-	page = request.args.get('page',1) # can use ?page=2 or something to paginate the system (rudimentary navigation on the page already)
+	page = int(request.args.get('page',1)) # can use ?page=2 or something to paginate the system (rudimentary navigation on the page already)
 	db = sqlite3.connect(DATABASE) # get the database
 	c = db.cursor()
 	c.execute('SELECT * FROM pcaps ORDER BY uploaded DESC LIMIT ? OFFSET ?',(40,40*(page-1))) # get 40 pcaps, skipping 40*page offset
@@ -67,14 +67,21 @@ def logfilelist():
 def logfiledisp(filehash):
 	db = sqlite3.connect(DATABASE) # get the database
 	c = db.cursor()
-	c.execute('SELECT * FROM pcaps WHERE md5=?',(filehash)) # find the pcap since we're identifying them by hash
+	c.execute('SELECT * FROM pcaps WHERE md5=?',(filehash,)) # find the pcap since we're identifying them by hash
 	data = c.fetchone()
 	if not data:
 		flash('that file does not exist') # if there's no pcap with that hash, redirect to the listing
 		return redirect('/output')
 	### TODO: finish the processing that happens here
 	db.close()
-	return render_template('logfile.html',stuff=things) # pass in the logs
+	files = []
+	if data[3]:
+		filenames = os.listdir(data[3])
+		for fn in filenames:
+			fd = open(os.path.join(data[3],fn),'r')
+			files.append((fn,fd.read()))
+			fd.close()
+	return render_template('logfile.html',data=data,files=files) # pass in the logs
 
 if __name__ == '__main__': # debugging mode - just run the py file
 	#app.debug = True
