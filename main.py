@@ -10,7 +10,7 @@ import background
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER ## we want to save all the pcaps so this is not a tmp folder in the default config
-app.secret_key = SECRETKEY ## be sure to change this so you can't be pwn3d by 1337 h4x0rz
+app.secret_key = SECRETKEY ## be sure to change this in the config so you can't be pwn3d by 1337 h4x0rz
 
 filequeue = Queue.Queue() # processing queue for the files that are uploaded
 background.start(filequeue) # this starts a thread that blocks until a file is in the queue
@@ -64,7 +64,7 @@ def logfilelist():
 	return render_template('listing.html',files=files,page=page) # pass in the page number and the file listing
 
 @app.route('/output/<filehash>') # displays the logs of a single file
-def logfilelist(filehash):
+def logfiledisp(filehash):
 	db = sqlite3.connect(DATABASE) # get the database
 	c = db.cursor()
 	c.execute('SELECT * FROM pcaps WHERE md5=?',(filehash)) # find the pcap since we're identifying them by hash
