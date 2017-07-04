@@ -34,6 +34,7 @@ def upload():
 		filename = time.strftime('%m%d%Y.%H%M-') + secure_filename(file.filename) # prepend a date and time stamp
 		origfilename = secure_filename(file.filename) # keep this around as well to put into the db later
 		engine = request.form.get('engine','suricata-2.0.6') # gets the selected engine from the dropdown in the form, defaulting to suri 206
+		private = request.form.get('private',False) # checkbox that makes the file private
 		path = os.path.join(app.config['UPLOAD_FOLDER'], filename) # keep the full path to the uploaded file
 		print 'saving file...',filename # another debug statement
 		file.save(path) # saves to the permentant storage dir
@@ -46,11 +47,13 @@ def upload():
 		if existing: # if there is not an empty array
 			flash('that file hash is already in the database!')
 			return redirect('/output/'+filehash) # redirect to the page for the existing file
-		c.execute('INSERT INTO pcaps VALUES (?,?,?,?,?,?)',(origfilename,filename,0,'',filehash,time.time())) # otherwise store the new pcap data into the database
+		c.execute('INSERT INTO pcaps VALUES (?,?,?,?,?,?,?)',(origfilename,filename,0,'',filehash,time.time(),private)) # otherwise store the new pcap data into the database
 		db.commit() # save the db
 		db.close()
 		filequeue.put((filename,engine,filehash,path)) # add the info for the new file to the processing queue
 		flash('processing pcap in progress... wait a little while and then refresh') # give the user a message about the status
+		if private:
+			flash('this is a private pcap - if you lose the URL, you won\'t be able to find it again')
 		return redirect('/output/'+filehash) # redirect to the page for the unfinished sample
 
 @app.route('/output') # displays a list of the pcaps submitted to the system
@@ -58,7 +61,7 @@ def logfilelist():
 	page = int(request.args.get('page',1)) # can use ?page=2 or something to paginate the system (rudimentary navigation on the page already)
 	db = sqlite3.connect(DATABASE) # get the database
 	c = db.cursor()
-	c.execute('SELECT * FROM pcaps ORDER BY uploaded DESC LIMIT ? OFFSET ?',(40,40*(page-1))) # get 40 pcaps, skipping 40*page offset
+	c.execute('SELECT * FROM pcaps WHERE private=False ORDER BY uploaded DESC LIMIT ? OFFSET ?',(40,40*(page-1))) # get 40 non-private pcaps, skipping 40*page offset
 	files = c.fetchall() # get them all for display
 	db.close()
 	return render_template('listing.html',files=files,page=page) # pass in the page number and the file listing
