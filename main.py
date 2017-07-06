@@ -7,6 +7,9 @@ import time
 from config import *
 from util import *
 import background
+from pygments import highlight
+from pygments.lexers import guess_lexer, get_lexer_by_name
+from pygments.formatters import HtmlFormatter
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER ## we want to save all the pcaps so this is not a tmp folder in the default config
@@ -83,9 +86,14 @@ def logfiledisp(filehash):
 		for fn in filenames:
 			if fn in DISPLAYFILES:
 				fd = open(os.path.join(data[3],fn),'r')
-				files.append((fn,fd.read()))
+				raw = fd.read()
 				fd.close()
-	return render_template('logfile.html',data=data,files=files) # pass in the logs
+				lexer = get_lexer_by_name('json')
+				formatter = HtmlFormatter(linenos=True)
+				formatted = highlight(raw,lexer,formatter)
+				files.append((fn,formatted))
+				css = HtmlFormatter().get_style_defs('.highlight')
+	return render_template('logfile.html',css=css,data=data,files=files) # pass in the logs
 
 if __name__ == '__main__': # debugging mode - just run the py file
 	#app.debug = True
