@@ -92,7 +92,7 @@ def logfiledisp(filehash):
 				formatter = HtmlFormatter(linenos=True)
 				formatted = highlight(raw,lexer,formatter)
 				files.append((fn,formatted))
-				css = HtmlFormatter().get_style_defs('.highlight')
+	css = HtmlFormatter().get_style_defs('.highlight')
 	return render_template('logfile.html',css=css,data=data,files=files) # pass in the logs
 
 if __name__ == '__main__': # debugging mode - just run the py file

@@ -30,14 +30,16 @@
 		</td>
 	</tr>
 </table>
-{% for file in files %}
+{% if files|length > 1 %}
 <h4>Logfiles</h4>
 <ul>
+	{% for file in files %}
 	<li>
 		<a href="#{{ file[0] }}">{{ file[0] }}</a><br />
 	</li>
+	{% endfor %}
 </ul>
-{% endfor %}
+{% endif %}
 
 {% for file in files %}
 <p>
