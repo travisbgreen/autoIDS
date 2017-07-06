@@ -53,7 +53,7 @@ def upload():
 		filequeue.put((filename,engine,filehash,path)) # add the info for the new file to the processing queue
 		flash('processing pcap in progress... wait a little while and then refresh') # give the user a message about the status
 		if private:
-			flash('this is a private pcap - if you lose the URL, you won\'t be able to find it again')
+			flash('this is a private pcap - if you lose the URL, you won\'t be able to find it again') # warn user when creating a private upload
 		return redirect('/output/'+filehash) # redirect to the page for the unfinished sample
 
 @app.route('/output') # displays a list of the pcaps submitted to the system
@@ -61,7 +61,7 @@ def logfilelist():
 	page = int(request.args.get('page',1)) # can use ?page=2 or something to paginate the system (rudimentary navigation on the page already)
 	db = sqlite3.connect(DATABASE) # get the database
 	c = db.cursor()
-	c.execute('SELECT * FROM pcaps WHERE private=False ORDER BY uploaded DESC LIMIT ? OFFSET ?',(40,40*(page-1))) # get 40 non-private pcaps, skipping 40*page offset
+	c.execute('SELECT * FROM pcaps WHERE private=? ORDER BY uploaded DESC LIMIT ? OFFSET ?',(False,40,40*(page-1))) # get 40 non-private pcaps, skipping 40*page offset
 	files = c.fetchall() # get them all for display
 	db.close()
 	return render_template('listing.html',files=files,page=page) # pass in the page number and the file listing
