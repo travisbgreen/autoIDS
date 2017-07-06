@@ -81,9 +81,10 @@ def logfiledisp(filehash):
 	if data[3]:
 		filenames = os.listdir(data[3])
 		for fn in filenames:
-			fd = open(os.path.join(data[3],fn),'r')
-			files.append((fn,fd.read()))
-			fd.close()
+			if fn in DISPLAYFILES:
+				fd = open(os.path.join(data[3],fn),'r')
+				files.append((fn,fd.read()))
+				fd.close()
 	return render_template('logfile.html',data=data,files=files) # pass in the logs
 
 if __name__ == '__main__': # debugging mode - just run the py file
