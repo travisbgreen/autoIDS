@@ -27,9 +27,19 @@
 		</td>
 	</tr>
 </table>
-<hr />
+{% for file in files %}
+<h4>Logfiles</h4>
+<ul>
+	<li>
+		<a href="#{{ file[0] }}">{{ file[0] }}</a><br />
+	</li>
+</ul>
+{% endfor %}
+
 {% for file in files %}
 <p>
+	<hr />
+	<a id='{{ file[0] }}' name='{{ file[0] }}'></a>
 	<b>{{ file[0] }}</b><br />
 	<pre>
 {{ file[1] }}
