@@ -48,6 +48,8 @@
 	{% if page > 1 %}
 	<a href='/output?page={{ page-1 }}'>Previous page</a>
 	{% endif %}
+	{% if nextpage %}
 	<a href='/output?page={{ page+1 }}'>Next page</a>
+	{% endif %}
 </p>
 {% endblock %}

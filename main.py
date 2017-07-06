@@ -64,10 +64,12 @@ def logfilelist():
 	page = int(request.args.get('page',1)) # can use ?page=2 or something to paginate the system (rudimentary navigation on the page already)
 	db = sqlite3.connect(DATABASE) # get the database
 	c = db.cursor()
-	c.execute('SELECT * FROM pcaps WHERE private=? ORDER BY uploaded DESC LIMIT ? OFFSET ?',(False,40,40*(page-1))) # get 40 non-private pcaps, skipping 40*page offset
+	c.execute('SELECT * FROM pcaps WHERE private=? ORDER BY uploaded DESC LIMIT ? OFFSET ?',(False,PERPAGE+1,PERPAGE*(page-1))) # get PERPAGE+1 non-private pcaps, skipping 40*page offset
 	files = c.fetchall() # get them all for display
+	nextpage = len(files) > PERPAGE
+	files = files[:PERPAGE]
 	db.close()
-	return render_template('listing.html',files=files,page=page) # pass in the page number and the file listing
+	return render_template('listing.html',files=files,page=page,nextpage=nextpage) # pass in the page number and the file listing
 
 @app.route('/output/<filehash>') # displays the logs of a single file
 def logfiledisp(filehash):
