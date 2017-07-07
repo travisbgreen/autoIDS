@@ -6,7 +6,7 @@ import sqlite3
 import time
 from config import *
 from util import *
-import background
+from background import process,datalock
 from pygments import highlight
 from pygments.lexers import guess_lexer, get_lexer_by_name
 from pygments.formatters import HtmlFormatter
@@ -15,16 +15,13 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER ## we want to save all the pcaps so this is not a tmp folder in the default config
 app.secret_key = SECRETKEY ## be sure to change this in the config so you can't be pwn3d by 1337 h4x0rz
 
-filequeue = Queue.Queue() # processing queue for the files that are uploaded
-background.start(filequeue) # this starts a thread that blocks until a file is in the queue
-
 @app.route('/') # main page = upload spot
 def mainpage():
 	return render_template('upload.html',engines=ENGINES) # list of the engines available goes into the dropdown in the form
 
 @app.route('/upload',methods=['POST']) # post to this actually triggers upload (so it could be done with cURL if you want)
 def upload():
-	global filequeue # so we can access this
+	global datalock
 	print request.files # debug statement showing what they are trying to upload
 	if not 'file' in request.files: # if there's no file included, try again
 		flash('no file in form') # this displays a message at tnbe top of the next page they load, in this case, the main page
@@ -42,7 +39,7 @@ def upload():
 		print 'saving file...',filename # another debug statement
 		file.save(path) # saves to the permentant storage dir
 		filehash = md5(path) # hash the file so we can see if it was already uploaded
-		#### TODO: maybe acquire a lock so that other threads will not interfere with the DB while we write to it
+		datalock.acquire()
 		db = sqlite3.connect(DATABASE) # connect to the SQLite db to store the file info
 		c = db.cursor()
 		c.execute('SELECT * FROM pcaps WHERE md5=?',(filehash,)) # check if there is alredy a pcap in the database that has the md5 of this one
@@ -53,7 +50,8 @@ def upload():
 		c.execute('INSERT INTO pcaps VALUES (?,?,?,?,?,?,?)',(origfilename,filename,0,'',filehash,time.time(),private)) # otherwise store the new pcap data into the database
 		db.commit() # save the db
 		db.close()
-		filequeue.put((filename,engine,filehash,path)) # add the info for the new file to the processing queue
+		datalock.release()
+		process((filename,engine,filehash,path)) # opens a new thread to process the pcap
 		flash('processing pcap in progress... wait a little while and then refresh') # give the user a message about the status
 		if private:
 			flash('this is a private pcap - if you lose the URL, you won\'t be able to find it again') # warn user when creating a private upload
@@ -86,11 +84,11 @@ def logfiledisp(filehash):
 	if data[3]:
 		filenames = os.listdir(data[3])
 		for fn in filenames:
-			if fn in DISPLAYFILES:
+			if fn in DISPLAYFILES or True: ## disable the 'or True' because its for debugging
 				fd = open(os.path.join(data[3],fn),'r')
 				raw = fd.read()
 				fd.close()
-				lexer = get_lexer_by_name('json')
+				lexer = guess_lexer(raw)
 				formatter = HtmlFormatter(linenos=True)
 				formatted = highlight(raw,lexer,formatter)
 				files.append((fn,formatted))
