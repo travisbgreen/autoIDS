@@ -10,23 +10,23 @@
 <table>
 	<tr>
 		<td>
-			<b>Filename: </b>{{ data[0] }}
+			<b>Filename: </b>{{ data.pcap.filename }}
 		</td>
 		<td>
 			<b>Status: </b>
-			{% if data[2] == 1 %}
+			{% if data.status == 1 %}
 			Analysis complete
-			{% elif data[2] == -1 %}
+			{% elif data.status == -1 %}
 			<span style="color:red;">Failed</span>
 			{% else %}
 			<span style="color:green;">In progress...</span>
 			{% endif %}
 		</td>
 		<td>
-			<b>Hash: </b>{{ data[4] }}
+			<b>Hash: </b>{{ data.pcap.md5 }}
 		</td>
 		<td>
-			<b>Uploaded: </b>{{ data[5] }}
+			<b>Uploaded: </b>{{ data.run }}
 		</td>
 	</tr>
 </table>

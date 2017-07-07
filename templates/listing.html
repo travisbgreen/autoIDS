@@ -11,6 +11,12 @@
 				<b>Filename</b>
 			</td>
 			<td>
+				<b>IDS Chosen</b>
+			</td>
+			<td>
+				<b>Engine Chosen</b>
+			</td>
+			<td>
 				<b>Status</b>
 			</td>
 			<td>
@@ -23,22 +29,28 @@
 		{% for file in files %}
 		<tr>
 			<td>
-				<a href="/output/{{ file[4] }}">{{ file[0] }}</a>
+				<a href="/output/{{ file.pcap.md5 }}">{{ file.pcap.name }}</a>
 			</td>
 			<td>
-				{% if file[2] == 1 %}
+				{{ file.ids }}
+			</td>
+			<td>
+				{{ file.engine }}
+			</td>
+			<td>
+				{% if file.status == 1 %}
 				Analysis complete
-				{% elif file[2] == -1 %}
+				{% elif file.status == -1 %}
 				<span style="color:red;">Failed</span>
 				{% else %}
 				<span style="color:green;">In progress...</span>
 				{% endif %}
 			</td>
 			<td>
-				{{ file[4] }}
+				<a href="/output/{{ file.pcap.md5 }}">{{ file.pcap.md5 }}</a>
 			</td>
 			<td>
-				{{ file[5] }}
+				{{ file.run }}
 			</td>
 		</tr>
 		{% endfor %}

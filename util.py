@@ -18,9 +18,5 @@ if not os.path.exists(UPLOAD_FOLDER): # create the folder to upload the files in
 	os.mkdir(UPLOAD_FOLDER)
 if not os.path.exists(LOG_FOLDER): # create the folder to hold logs and output materials if it also dne
 	os.mkdir(LOG_FOLDER)
-if not os.path.exists(DATABASE): # set up the database if it does not exist
-	db = sqlite3.connect(DATABASE)
-	c = db.cursor()
-	c.execute('CREATE TABLE pcaps (name text, file text, status int, logpath text, md5 text, uploaded int, private boolean)')
-	db.commit()
-	db.close()
+
+## todo: move the peewee stuff here maybe to clean up the main file
