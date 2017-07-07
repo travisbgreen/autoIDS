@@ -14,15 +14,7 @@ from pygments.formatters import HtmlFormatter
 ### database stuff here for now.
 db = SqliteDatabase(DATABASE)
 
-class BaseModel(Model):
-	@classmethod
-	def get_or_none(cls, *query, **kwargs):
-		try:
-			return cls.get(*query)
-		except cls.DoesNotExist:
-			return None
-
-class Pcap(BaseModel):
+class Pcap(Model):
 	md5 = CharField()
 	filename = CharField()
 	filepath = CharField()
@@ -31,7 +23,7 @@ class Pcap(BaseModel):
 	class Meta:
 		database = db
 
-class ProcessedPcap(BaseModel):
+class ProcessedPcap(Model):
 	runid = CharField()
 	engine = CharField()
 	ids = CharField()
@@ -83,11 +75,17 @@ def upload():
 		datalock.acquire()
 		db.connect()
 		runid = hashlib.md5(ids+engine+rules).hexdigest()
-		query = Pcap.select().where(Pcap.md5==filehash).get_or_none()
+		try:
+			query = Pcap.select().where(Pcap.md5==filehash).get()
+		except:
+			query = None
 		if query: # if there is not an empty array
 			flash('that file hash is already in the database!')
 			return redirect('/output/'+filehash) # TODO: redirect to the rerun page??
-		query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid).get_or_none()
+		try:
+			query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid).get()
+		except:
+			query = None
 		if query:
 			flash('that file has already been processed with those settings!')
 			return redirect('/output/'+filehash+'/'+runid)
@@ -105,7 +103,10 @@ def upload():
 def logfilelist():
 	page = int(request.args.get('page',1)) # can use ?page=2 or something to paginate the system (rudimentary navigation on the page already)
 	db.connect()
-	files = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.private==False).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE).get_or_none()
+	try:
+		files = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.private==False).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE).get()
+	except:
+		files = None
 	nextpage = len(files) >= PERPAGE
 	db.close()
 	return render_template('listing.html',files=files,page=page,nextpage=nextpage) # pass in the page number and the file listing
@@ -117,7 +118,10 @@ def logfileselect(filehash):
 @app.route('/output/<filehash>/<runid>') # displays the logs of a single file
 def logfiledisp(filehash,runid):
 	db.connect() # get the database
-	query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid).get_or_none()
+	try:
+		query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid).get()
+	except:
+		query = None
 	if not query:
 		flash('that file does not exist') # if there's no pcap with that hash, redirect to the listing
 		return redirect('/output')
