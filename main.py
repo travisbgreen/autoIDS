@@ -14,7 +14,15 @@ from pygments.formatters import HtmlFormatter
 ### database stuff here for now.
 db = SqliteDatabase(DATABASE)
 
-class Pcap(Model):
+class BaseModel(Model):
+	@classmethod
+	def get_or_none(cls, *query, **kwargs):
+		try:
+			return cls.get(*query)
+		except cls.DoesNotExist:
+			return None
+
+class Pcap(BaseModel):
 	md5 = CharField()
 	filename = CharField()
 	filepath = CharField()
@@ -23,7 +31,7 @@ class Pcap(Model):
 	class Meta:
 		database = db
 
-class ProcessedPcap(Model):
+class ProcessedPcap(BaseModel):
 	runid = CharField()
 	engine = CharField()
 	ids = CharField()
@@ -36,7 +44,10 @@ class ProcessedPcap(Model):
 		database = db
 
 db.connect()
-db.create_tables([Pcap,ProcessedPcap])
+try:
+	db.create_tables([Pcap,ProcessedPcap])
+except OperationalError:
+	pass # tables aready exist
 db.close()
 
 app = Flask(__name__)
@@ -64,6 +75,7 @@ def upload():
 		ids = request.form.get('ids','suricata-2.0.6') # gets the selected engine from the dropdown in the form, defaulting to suri 206
 		private = request.form.get('private',False) # checkbox that makes the file private
 		path = os.path.join(app.config['UPLOAD_FOLDER'], filename) # keep the full path to the uploaded file
+		engine = request.form.get('engine','etopen-all')
 		rules = request.form.get('rules','')
 		print 'saving file...',filename # another debug statement
 		file.save(path) # saves to the permentant storage dir
@@ -71,19 +83,19 @@ def upload():
 		datalock.acquire()
 		db.connect()
 		runid = hashlib.md5(ids+engine+rules).hexdigest()
-		query = Pcap.select().where(Pcap.md5==filehash).get()
+		query = Pcap.select().where(Pcap.md5==filehash).get_or_none()
 		if query: # if there is not an empty array
 			flash('that file hash is already in the database!')
 			return redirect('/output/'+filehash) # TODO: redirect to the rerun page??
-		query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid).get()
+		query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid).get_or_none()
 		if query:
 			flash('that file has already been processed with those settings!')
 			return redirect('/output/'+filehash+'/'+runid)
 		pcap = Pcap.create(md5=filehash,filename=file.filename,filepath=path,uploaded=time.time(),private=private)
-		run = ProcessedPcap.create(runid=runid,pcap=pcap,ids=ids,engine='etopen-all',rules=rules,status=0,logpath='')
+		run = ProcessedPcap.create(runid=runid,pcap=pcap,ids=ids,engine=engine,rules=rules,status=0,logpath='')
 		db.close()
 		datalock.release()
-		process((filename,engine,filehash,path)) # opens a new thread to process the pcap
+		process(run) # opens a new thread to process the pcap
 		flash('processing pcap in progress... wait a little while and then refresh') # give the user a message about the status
 		if private:
 			flash('this is a private pcap - if you lose the URL, you won\'t be able to find it again') # warn user when creating a private upload
@@ -93,7 +105,7 @@ def upload():
 def logfilelist():
 	page = int(request.args.get('page',1)) # can use ?page=2 or something to paginate the system (rudimentary navigation on the page already)
 	db.connect()
-	files = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.private==False).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE)
+	files = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.private==False).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE).get_or_none()
 	nextpage = len(files) >= PERPAGE
 	db.close()
 	return render_template('listing.html',files=files,page=page,nextpage=nextpage) # pass in the page number and the file listing
@@ -105,7 +117,7 @@ def logfileselect(filehash):
 @app.route('/output/<filehash>/<runid>') # displays the logs of a single file
 def logfiledisp(filehash,runid):
 	db.connect() # get the database
-	query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid).get()
+	query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid).get_or_none()
 	if not query:
 		flash('that file does not exist') # if there's no pcap with that hash, redirect to the listing
 		return redirect('/output')
