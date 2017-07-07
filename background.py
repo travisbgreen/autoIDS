@@ -23,7 +23,10 @@ def backgroundthread(run): # runs in the background and processes files one at a
 		files = os.listdir(logpath) # see what files were created
 		print files # for debugging
 		datalock.acquire()
-		db.connect()
+		try:
+			db.connect()
+		except:
+			pass
 		run.logpath = logpath
 		run.status = stat
 		run.save()

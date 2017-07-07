@@ -73,7 +73,10 @@ def upload():
 		file.save(path) # saves to the permentant storage dir
 		filehash = md5(path) # hash the file so we can see if it was already uploaded
 		datalock.acquire()
-		db.connect()
+		try:
+			db.connect()
+		except:
+			pass
 		runid = hashlib.md5(ids+engine+rules).hexdigest()
 		try:
 			query = Pcap.select().where(Pcap.md5==filehash).get()
@@ -83,43 +86,49 @@ def upload():
 			flash('that file hash is already in the database!')
 			return redirect('/output/'+filehash) # TODO: redirect to the rerun page??
 		try:
-			query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid).get()
+			query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid)
 		except:
 			query = None
 		if query:
 			flash('that file has already been processed with those settings!')
 			return redirect('/output/'+filehash+'/'+runid)
 		pcap = Pcap.create(md5=filehash,filename=file.filename,filepath=path,uploaded=time.time(),private=private)
-		run = ProcessedPcap.create(runid=runid,pcap=pcap,ids=ids,engine=engine,rules=rules,status=0,logpath='')
+		run = ProcessedPcap.create(runid=runid,pcap=pcap,ids=ids,engine=engine,rules=rules,status=0,logpath='',run=time.time())
 		db.close()
 		datalock.release()
 		process(run) # opens a new thread to process the pcap
 		flash('processing pcap in progress... wait a little while and then refresh') # give the user a message about the status
 		if private:
 			flash('this is a private pcap - if you lose the URL, you won\'t be able to find it again') # warn user when creating a private upload
-		return redirect('/output/'+filehash) # redirect to the page for the unfinished sample
+		return redirect('/output/'+filehash+'/'+runid) # redirect to the page for the unfinished sample
 
 @app.route('/output') # displays a list of the pcaps submitted to the system
 def logfilelist():
 	page = int(request.args.get('page',1)) # can use ?page=2 or something to paginate the system (rudimentary navigation on the page already)
-	db.connect()
 	try:
-		files = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.private==False).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE).get()
+		db.connect()
 	except:
-		files = None
+		pass
+	try:
+		files = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.private==False).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE)
+	except:
+		files = []
 	nextpage = len(files) >= PERPAGE
 	db.close()
 	return render_template('listing.html',files=files,page=page,nextpage=nextpage) # pass in the page number and the file listing
 
 @app.route('/output/<filehash>')
-def logfileselect(filehash):
-	return
+def logfileselect(filehash): # lists all the logfiles associated with a specific pcap
+	return 'NYI'
 
 @app.route('/output/<filehash>/<runid>') # displays the logs of a single file
 def logfiledisp(filehash,runid):
-	db.connect() # get the database
 	try:
-		query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid).get()
+		db.connect()
+	except:
+		pass # get the database
+	try:
+		query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid)
 	except:
 		query = None
 	if not query:
