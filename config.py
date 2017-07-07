@@ -1,4 +1,8 @@
+#!/usr/bin/env python2
 import sqlite3,os
+
+UNPRIV_USER = 'autoids'
+UNPRIV_PASS = '495f4bf2d84e6db716a923f209bed881'
 
 UPLOAD_FOLDER = '/var/pcap' # pcap files are uploaded here
 LOG_FOLDER = '/var/pcap/logs' # logs are put here in their own folders

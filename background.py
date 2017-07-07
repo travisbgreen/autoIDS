@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 from config import *
 import threading, os, sqlite3, time ### TODO: time the operation and save in db
 
