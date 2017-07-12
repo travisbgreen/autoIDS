@@ -1,0 +1,9 @@
+Dependencies:
+
+- Python (2.7)
+- IDSDeathBlossom
+
+Python libs:
+- flask
+- peewee
+- pygments
