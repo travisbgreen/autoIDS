@@ -29,7 +29,7 @@
 		{% for file in files %}
 		<tr>
 			<td>
-				<a href="/output/{{ file.pcap.md5 }}">{{ file.pcap.name }}</a>
+				<a href="/output/{{ file.pcap.md5 }}/{{ file.runid }}">{{ file.pcap.name }}</a>
 			</td>
 			<td>
 				{{ file.ids }}

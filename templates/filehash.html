@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Logfiles{% endblock %}
+{% block body %}
+<p>
+	List of runs for this pcap. Go <a href="/output">here</a> to see all the runs.
+</p>
+<table>
+	<tr>
+		<td>
+			<b>Filename: </b>{{ file.pcap.filename }}
+		</td>
+		<td>
+			<b>Status: </b>
+			{% if file.status == 1 %}
+			Analysis complete
+			{% elif file.status == -1 %}
+			<span style="color:red;">Failed</span>
+			{% else %}
+			<span style="color:green;">In progress...</span>
+			{% endif %}
+		</td>
+		<td>
+			<b>Hash: </b>{{ file.pcap.md5 }}
+		</td>
+		<td>
+			<b>Uploaded: </b>{{ file.uploaded }}
+		</td>
+	</tr>
+</table>
+<p>
+	<table>
+		<tr>
+			<td>
+				<b>Run ID</b>
+			</td>
+			<td>
+				<b>IDS Chosen</b>
+			</td>
+			<td>
+				<b>Engine Chosen</b>
+			</td>
+			<td>
+				<b>Status</b>
+			</td>
+			<td>
+				<b>Date run</b>
+			</td>
+		</tr>
+		{% for run in runs %}
+		<tr>
+			<td>
+				<a href="/output/{{ run.pcap.md5 }}/{{ run.runid }}">{{ run.runid }}</a>
+			</td>
+			<td>
+				{{ run.ids }}
+			</td>
+			<td>
+				{{ run.engine }}
+			</td>
+			<td>
+				{% if run.status == 1 %}
+				Analysis complete
+				{% elif run.status == -1 %}
+				<span style="color:red;">Failed</span>
+				{% else %}
+				<span style="color:green;">In progress...</span>
+				{% endif %}
+			</td>
+			<td>
+				{{ run.run }}
+			</td>
+		</tr>
+		{% endfor %}
+	</table>
+</p>
+<p>
+	{% if page > 1 %}
+	<a href='/output?page={{ page-1 }}'>Previous page</a>
+	{% endif %}
+	{% if nextpage %}
+	<a href='/output?page={{ page+1 }}'>Next page</a>
+	{% endif %}
+</p>
+{% endblock %}

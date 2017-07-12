@@ -12,7 +12,7 @@ from pygments.lexers import guess_lexer, get_lexer_by_name
 from pygments.formatters import HtmlFormatter
 
 ### database stuff here for now.
-db = SqliteDatabase(DATABASE)
+db = SqliteDatabase(DATABASE, threadlocals=True)
 
 class Pcap(Model):
 	md5 = CharField()
@@ -119,7 +119,23 @@ def logfilelist():
 
 @app.route('/output/<filehash>')
 def logfileselect(filehash): # lists all the logfiles associated with a specific pcap
-	return 'NYI'
+	page = int(request.args.get('page',1)) # can use ?page=2 or something to paginate the system (rudimentary navigation on the page already)
+	try:
+		db.connect()
+	except:
+		pass
+	try:
+		ofile = Pcap.select().where(Pcap.md5==filehash).get()
+	except:
+		flash('that file does not exist') # if there's no pcap with that hash, redirect to the listing
+		return redirect('/output')
+	try:
+		runs = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(Pcap.md5==filehash).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE)
+	except:
+		runs = []
+	nextpage = len(files) >= PERPAGE
+	db.close()
+	return render_template('listing.html',file=ofile,runs=runs,page=page,nextpage=nextpage)
 
 @app.route('/output/<filehash>/<runid>') # displays the logs of a single file
 def logfiledisp(filehash,runid):
@@ -132,7 +148,7 @@ def logfiledisp(filehash,runid):
 	except:
 		query = None
 	if not query:
-		flash('that file does not exist') # if there's no pcap with that hash, redirect to the listing
+		flash('that run or file does not exist') # if there's no pcap with that hash, redirect to the listing
 		return redirect('/output')
 	data = query[0]
 	db.close()
