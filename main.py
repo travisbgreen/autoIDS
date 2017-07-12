@@ -156,7 +156,12 @@ def logfiledisp(filehash,runid):
 				fd = open(os.path.join(data.logpath,fn),'r')
 				raw = fd.read()
 				fd.close()
-				lexer = guess_lexer(raw)
+				if not raw:
+					continue
+				if raw.startswith('{'):
+					lexer = get_lexer_by_name('json')
+				else:
+					lexer = get_lexer_by_name('makefile')
 				formatter = HtmlFormatter(linenos=True)
 				formatted = highlight(raw,lexer,formatter)
 				files.append((fn,formatted))
