@@ -7,20 +7,10 @@
 <table>
 	<tr>
 		<td>
-			<b>Filename: </b>{{ file.pcap.filename }}
+			<b>Filename: </b>{{ file.filename }}
 		</td>
 		<td>
-			<b>Status: </b>
-			{% if file.status == 1 %}
-			Analysis complete
-			{% elif file.status == -1 %}
-			<span style="color:red;">Failed</span>
-			{% else %}
-			<span style="color:green;">In progress...</span>
-			{% endif %}
-		</td>
-		<td>
-			<b>Hash: </b>{{ file.pcap.md5 }}
+			<b>Hash: </b>{{ file.md5 }}
 		</td>
 		<td>
 			<b>Uploaded: </b>{{ file.uploaded }}

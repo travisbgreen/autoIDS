@@ -110,7 +110,7 @@ def logfilelist():
 	except:
 		pass
 	try:
-		files = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.private==False).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE)
+		files = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(Pcap.private==False).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE)
 	except:
 		files = []
 	nextpage = len(files) >= PERPAGE
@@ -133,9 +133,9 @@ def logfileselect(filehash): # lists all the logfiles associated with a specific
 		runs = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(Pcap.md5==filehash).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE)
 	except:
 		runs = []
-	nextpage = len(files) >= PERPAGE
+	nextpage = len(runs) >= PERPAGE
 	db.close()
-	return render_template('listing.html',file=ofile,runs=runs,page=page,nextpage=nextpage)
+	return render_template('filehash.html',file=ofile,runs=runs,page=page,nextpage=nextpage)
 
 @app.route('/output/<filehash>/<runid>') # displays the logs of a single file
 def logfiledisp(filehash,runid):
@@ -144,13 +144,10 @@ def logfiledisp(filehash,runid):
 	except:
 		pass # get the database
 	try:
-		query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid)
+		data = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(Pcap.md5==filehash, ProcessedPcap.runid==runid).get()
 	except:
-		query = None
-	if not query:
 		flash('that run or file does not exist') # if there's no pcap with that hash, redirect to the listing
 		return redirect('/output')
-	data = query[0]
 	db.close()
 	files = []
 	if data.logpath:
