@@ -2,7 +2,7 @@ from config import *
 import threading, os, time ### TODO: time the operation and save in db
 from peewee import *
 
-db = SqliteDatabase(DATABASE)
+db = SqliteDatabase(DATABASE, threadlocals=True)
 
 threadlock = threading.Lock()
 datalock = threading.Lock()

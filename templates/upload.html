@@ -5,7 +5,12 @@
 	Upload a pcap here to be processed.
 </p>
 <form method="post" action="/upload" enctype="multipart/form-data">
+	{% if rerun %}
+	<input type="hidden" name="rerunhash" value="{{ rerunhash }}" />
+	<b>Re-run: {{ rerunhash }}</b><br />
+	{% else %}
 	<input type="file" name="file" /><br />
+	{% endif %}
 	<select name="ids">
 		{% for ids in idss %}
 		<option value="{{ ids }}">{{ ids }}</option>

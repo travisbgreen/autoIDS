@@ -48,58 +48,83 @@ app.secret_key = SECRETKEY ## be sure to change this in the config so you can't 
 
 @app.route('/') # main page = upload spot
 def mainpage():
-	return render_template('upload.html',idss=IDSS) # list of the engines available goes into the dropdown in the form
+	return render_template('upload.html',idss=IDSS,rerun=False) # list of the engines available goes into the dropdown in the form
+
+@app.route('/rerun/<filehash>')
+def rerun(filehash):
+	try:
+		reruninfo = Pcap.select().where(Pcap.md5==filehash).get()
+	except:
+		flash('that file does not exist so it can not be rerun')
+		return redirect('/')
+	return render_template('upload.html',idss=IDSS,rerun=True,rerunhash=filehash)
 
 @app.route('/upload',methods=['POST']) # post to this actually triggers upload (so it could be done with cURL if you want)
 def upload():
 	global datalock
-	print request.files # debug statement showing what they are trying to upload
-	if not 'file' in request.files: # if there's no file included, try again
-		flash('no file in form') # this displays a message at the top of the next page they load, in this case, the main page
+	try:
+		db.connect()
+	except:
+		pass
+
+	allowed = False
+	reupload = False
+	if request.files:
+		if not 'file' in request.files: # if there's no file included, try again
+			flash('no file in form') # this displays a message at the top of the next page they load, in this case, the main page
+			return redirect('/')
+		file = request.files['file'] # just one file that we're uploading
+		if file.filename == '': # invalid filename also means not selected in the form
+			flash('no selected file')
+			return redirect('/')
+		if file and allowed_file(file.filename): # check if the filename ends with .pcap or .pcapng (can be changed in config)
+			savefilename = time.strftime('%m%d%Y.%H%M-') + secure_filename(file.filename) # prepend a date and time stamp
+			filename = file.filename
+			path = os.path.join(app.config['UPLOAD_FOLDER'], savefilename) # keep the full path to the uploaded file
+			file.save(path) # saves to the permentant storage dir
+			filehash = md5(path) # hash the file so we can see if it was already uploaded
+			allowed = True
+	elif 'rerunhash' in request.form:
+		try:
+			filehash = request.form.get('rerunhash')
+			print filehash
+			reruninfo = Pcap.select().where(Pcap.md5==filehash).get()
+			filename = reruninfo.filename
+			path = reruninfo.filepath
+			allowed = True
+			reupload = True
+		except:
+			allowed = False
+	if not allowed:
+		flash('unhelpful error message')
 		return redirect('/')
-	file = request.files['file'] # just one file that we're uploading
-	if file.filename == '': # invalid filename also means not selected in the form
-		flash('no selected file')
-		return redirect('/')
-	if file and allowed_file(file.filename): # check if the filename ends with .pcap or .pcapng (can be changed in config)
-		filename = time.strftime('%m%d%Y.%H%M-') + secure_filename(file.filename) # prepend a date and time stamp
-		origfilename = secure_filename(file.filename) # keep this around as well to put into the db later
-		ids = request.form.get('ids','suricata-2.0.6') # gets the selected engine from the dropdown in the form, defaulting to suri 206
-		private = request.form.get('private',False) # checkbox that makes the file private
-		path = os.path.join(app.config['UPLOAD_FOLDER'], filename) # keep the full path to the uploaded file
-		engine = request.form.get('engine','etopen-all')
-		rules = request.form.get('rules','')
-		print 'saving file...',filename # another debug statement
-		file.save(path) # saves to the permentant storage dir
-		filehash = md5(path) # hash the file so we can see if it was already uploaded
-		datalock.acquire()
-		try:
-			db.connect()
-		except:
-			pass
-		runid = hashlib.md5(ids+engine+rules).hexdigest()
-		try:
-			query = Pcap.select().where(Pcap.md5==filehash)
-		except:
-			query = None
-		if query: # if there is not an empty array
-			flash('that file hash is already in the database!')
-		try:
-			query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid)
-		except:
-			query = None
-		if query:
-			flash('that file has already been processed with those settings!')
-			return redirect('/output/'+filehash+'/'+runid)
-		pcap = Pcap.create(md5=filehash,filename=file.filename,filepath=path,uploaded=time.time(),private=private)
-		run = ProcessedPcap.create(runid=runid,pcap=pcap,ids=ids,engine=engine,rules=rules,status=0,logpath='',run=time.time())
-		db.close()
-		datalock.release()
-		process(run) # opens a new thread to process the pcap
-		flash('processing pcap in progress... wait a little while and then refresh') # give the user a message about the status
-		if private:
-			flash('this is a private pcap - if you lose the URL, you won\'t be able to find it again') # warn user when creating a private upload
-		return redirect('/output/'+filehash+'/'+runid) # redirect to the page for the unfinished sample
+
+	ids = request.form.get('ids','suricata-2.0.6') # gets the selected engine from the dropdown in the form, defaulting to suri 206
+	private = request.form.get('private',False) # checkbox that makes the file private
+	engine = request.form.get('engine','etopen-all')
+	rules = request.form.get('rules','')
+	datalock.acquire()
+	runid = hashlib.md5(ids+engine+rules).hexdigest()
+	try:
+		pcap = Pcap.select().where(Pcap.md5==filehash).get()
+	except:
+		pass #flash('that file hash is already in the database!')
+	try:
+		query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid)
+		flash('that file has already been processed with those settings!')
+		return redirect('/output/'+filehash+'/'+runid)
+	except:
+		pass
+	if not reupload:
+		pcap = Pcap.create(md5=filehash,filename=filename,filepath=path,uploaded=time.time(),private=private)
+	run = ProcessedPcap.create(runid=runid,pcap=pcap,ids=ids,engine=engine,rules=rules,status=0,logpath='',run=time.time())
+	db.close()
+	datalock.release()
+	process(run) # opens a new thread to process the pcap
+	flash('processing pcap in progress... wait a little while and then refresh') # give the user a message about the status
+	if private:
+		flash('this is a private pcap - if you lose the URL, you won\'t be able to find it again') # warn user when creating a private upload
+	return redirect('/output/'+filehash+'/'+runid) # redirect to the page for the unfinished sample
 
 @app.route('/output') # displays a list of the pcaps submitted to the system
 def logfilelist():
