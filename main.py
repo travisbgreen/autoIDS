@@ -79,7 +79,7 @@ def upload():
 			pass
 		runid = hashlib.md5(ids+engine+rules).hexdigest()
 		try:
-			query = Pcap.select().where(Pcap.md5==filehash).get()
+			query = Pcap.select().where(Pcap.md5==filehash)
 		except:
 			query = None
 		if query: # if there is not an empty array
