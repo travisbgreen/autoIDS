@@ -2,13 +2,29 @@
 {% block title %}Logfiles{% endblock %}
 {% block body %}
 <p>
-	List of pcap files that have been processed.
+	List of runs for this pcap.
 </p>
+<table>
+	<tr>
+		<td>
+			<b>Filename: </b>{{ file.filename }}
+		</td>
+		<td>
+			<b>Hash: </b>{{ file.md5 }}
+		</td>
+		<td>
+			<b>Uploaded: </b>{{ file.uploaded }}
+		</td>
+		<td>
+			<a href="/rerun/{{ file.md5 }}">Re-run this file with different settings</a>
+		</td>
+	</tr>
+</table>
 <p>
 	<table>
 		<tr>
 			<td>
-				<b>Filename</b>
+				<b>Run ID</b>
 			</td>
 			<td>
 				<b>IDS Chosen</b>
@@ -20,37 +36,31 @@
 				<b>Status</b>
 			</td>
 			<td>
-				<b>Hash</b>
-			</td>
-			<td>
-				<b>Uploaded</b>
+				<b>Date run</b>
 			</td>
 		</tr>
-		{% for file in files %}
+		{% for run in runs %}
 		<tr>
 			<td>
-				<a href="/output/{{ file.pcap.md5 }}/{{ file.runid }}">{{ file.pcap.filename }}</a>
+				<a href="/output/{{ run.pcap.md5 }}/{{ run.runid }}">{{ run.runid }}</a>
 			</td>
 			<td>
-				{{ file.ids }}
+				{{ run.ids }}
 			</td>
 			<td>
-				{{ file.engine }}
+				{{ run.engine }}
 			</td>
 			<td>
-				{% if file.status == 1 %}
+				{% if run.status == 1 %}
 				Analysis complete
-				{% elif file.status == -1 %}
+				{% elif run.status == -1 %}
 				<span style="color:red;">Failed</span>
 				{% else %}
 				<span style="color:green;">In progress...</span>
 				{% endif %}
 			</td>
 			<td>
-				<a href="/output/{{ file.pcap.md5 }}">{{ file.pcap.md5 }}</a>
-			</td>
-			<td>
-				{{ file.run }}
+				{{ run.run }}
 			</td>
 		</tr>
 		{% endfor %}
