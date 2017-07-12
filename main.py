@@ -84,7 +84,6 @@ def upload():
 			query = None
 		if query: # if there is not an empty array
 			flash('that file hash is already in the database!')
-			return redirect('/output/'+filehash) # TODO: redirect to the rerun page??
 		try:
 			query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid)
 		except:
