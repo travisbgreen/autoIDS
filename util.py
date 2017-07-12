@@ -13,10 +13,3 @@ def allowed_file(filename):
 		if filename.endswith(ext): # checks the filename against all the allowed extensions (pcap, pcapng in this case)
 			return True
 	return False
-
-if not os.path.exists(UPLOAD_FOLDER): # create the folder to upload the files into if it does not exist
-	os.mkdir(UPLOAD_FOLDER)
-if not os.path.exists(LOG_FOLDER): # create the folder to hold logs and output materials if it also dne
-	os.mkdir(LOG_FOLDER)
-
-## todo: move the peewee stuff here maybe to clean up the main file
