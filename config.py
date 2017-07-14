@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-import sqlite3,os
+
 
 UNPRIV_USER = 'autoids'
 UNPRIV_PASS = '495f4bf2d84e6db716a923f209bed881'

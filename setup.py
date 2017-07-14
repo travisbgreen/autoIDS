@@ -19,7 +19,7 @@ if args.unprivileged:
         subprocess.call('echo \'' + UNPRIV_USER + ':' + UNPRIV_PASS + '\' | sudo chpasswd ', shell=True)
 else:
     input('Warning: is not suggested to run as unpriv user, ctl+c and restart with -u? press enter to continue without')
-    
+
 if not os.path.exists(UPLOAD_FOLDER): # create the folder to upload the files into if it does not exist
     os.mkdir(UPLOAD_FOLDER)
     if args.unprivileged:
@@ -29,12 +29,5 @@ if not os.path.exists(LOG_FOLDER): # create the folder to hold logs and output m
     if args.unprivileged:
         subprocess.call('chown ' + UNPRIV_USER + ':' + UNPRIV_USER + ' ' + LOG_FOLDER, shell=True)
 if not os.path.exists(DATABASE): # set up the database in UPLOAD_FOLDER if it does not exist
-    db = sqlite3.connect(DATABASE)
-    c = db.cursor()
-    c.execute('CREATE TABLE pcaps (name text, file text, status int, logpath text, md5 text, uploaded int, private boolean)')
-    db.commit()
-    db.close()
     if args.unprivileged:
         subprocess.call('chown ' + UNPRIV_USER + ':' + UNPRIV_USER + ' ' + DATABASE, shell=True)
-
-
