@@ -179,9 +179,13 @@ def logfiledisp(filehash,runid):
 		filenames = os.listdir(data.logpath)
 		for fn in filenames:
 			if fn in DISPLAYFILES or True: ## disable the 'or True' because its for debugging
-				fd = open(os.path.join(data.logpath,fn),'r')
-				raw = fd.read()
+				fdir = os.path.join(data.logpath,fn)
+				fsize = os.path.getsize(fdir)
+				fd = open(fdir,'r')
+				raw = fd.read(FILETRUNCATE)
 				fd.close()
+				dllink = "NYI"
+				trunc = fsize >= FILETRUNCATE
 				if not raw:
 					continue
 				if raw.startswith('{'):
@@ -190,7 +194,7 @@ def logfiledisp(filehash,runid):
 					lexer = get_lexer_by_name('makefile')
 				formatter = HtmlFormatter(linenos=True)
 				formatted = highlight(raw,lexer,formatter)
-				files.append((fn,formatted))
+				files.append((fn,formatted,trunc,fsize,dllink))
 	css = HtmlFormatter().get_style_defs('.highlight')
 	return render_template('logfile.html',css=css,data=data,files=files) # pass in the logs
 

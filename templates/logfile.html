@@ -38,7 +38,7 @@
 <ul>
 	{% for file in files %}
 	<li>
-		<a href="#{{ file[0] }}">{{ file[0] }}</a><br />
+		<a href="#{{ file[0] }}">{{ file[0] }}</a> - ({{ file[3] }} bytes) - <a href="{{ file[4] }}">download</a><br />
 	</li>
 	{% endfor %}
 </ul>
@@ -48,8 +48,11 @@
 <p>
 	<hr />
 	<a id='{{ file[0] }}' name='{{ file[0] }}'></a>
-	<b>{{ file[0] }}</b><br />
-	{{ file[1]|safe }}
+	<b>{{ file[0] }}</b> - ({{ file[3] }} bytes) - <a href="{{ file[4] }}">download</a><br />
+	{{ file[1]|safe }}<br />
+	{% if file[2] %}
+	This file has been truncated. <a href="{{ file[4] }}">Go here to download in full</a>.
+	{% endif %}
 </p>
 {% endfor %}
 {% endblock %}
