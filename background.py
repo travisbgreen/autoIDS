@@ -12,7 +12,7 @@ def backgroundthread(run): # runs in the background and processes files one at a
 	global threadlock,datalock
 	try:
 		print 'background thread picked up {} with {}, processing now...'.format(run.pcap.filename,run.ids) # debug statement
-		logpath = os.path.join(LOG_FOLDER,run.ids+'-'+run.pcap.filename) # make a folder in the log directory that is tagged with the engine and file name
+		logpath = os.path.join(LOG_FOLDER,run.pcap.md5+run.runid) # make a folder in the log directory that is tagged with the engine and file name
 		os.mkdir(logpath)
 		os.chdir(IDSDB_FOLDER) # cd to the path of the IDSDeathBlossom install so all the relative links and imports work properly
 		threadlock.acquire(True) # make sure we don't run these at the same time

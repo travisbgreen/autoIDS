@@ -187,7 +187,7 @@ def logfiledisp(filehash,runid):
 				fd = open(fdir,'r')
 				raw = fd.read(FILETRUNCATE)
 				fd.close()
-				dllink = "NYI"
+				dllink = STATICHOST + data.pcap.md5 + data.runid + '/' + fn
 				trunc = fsize >= FILETRUNCATE
 				if not raw:
 					continue

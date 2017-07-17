@@ -5,7 +5,7 @@ UNPRIV_USER = 'autoids'
 UNPRIV_PASS = '495f4bf2d84e6db716a923f209bed881'
 
 UPLOAD_FOLDER = '/var/pcap' # pcap files are uploaded here
-LOG_FOLDER = '/var/pcap/logs' # logs are put here in their own folders
+LOG_FOLDER = '/var/www/html' # logs are put here in their own folders
 IDSDB_FOLDER = '/opt/IDSDeathBlossom' # IDSDeathBlossom installation
 DATABASE = os.path.join(UPLOAD_FOLDER,'files.db') # path to the SQLite database that stores some info about files
 ALLOWED_EXTENSIONS = set(['pcap','pcapng']) # allowed file types to upload
@@ -14,5 +14,6 @@ ENGINES = ['etopen-all','etopen-base','etopenenall-all','etopenenall-base','etpr
 PERPAGE = 40
 FILEBLACKLIST = ['IDSDeathBlossom.py.log']
 FILETRUNCATE = 16384  # first 16kb of long files
+STATICHOST = 'http://192.168.1.8:81/' # url to the apache server that hosts the logfiles
 
-SECRETKEY = 'jasfpqurvpwhgq9pw34rn3qy42996h7d6gf8h5j4kj5hg679s08df7g0d8fg6hd89sfg8767b8v69b87n6cvb87n6cvnd5987erytwejkrh252mbn52mb5l2l54j2l50nvu3w754yt237098572307509878twe0rt98we70rt89gf7hdfg7h089fgh7df098h' # for session cookie encryption
+SECRETKEY = 'jasfpqurvpwhgq9pw34rn3qy42996h7d6gf8h5j4kj5zhg679s08df7g0d8fg6hd89sfg8767b8v69b87n6cvb87n6cvnd5987erytwejkrh252mbn52mb5l2l54j2l50nvu3w754yt237098572307509878twe0rt98we70rt89gf7hdfg7h089fgh7df098h' # for session cookie encryption
