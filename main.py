@@ -108,10 +108,12 @@ def upload():
 	runid = hashlib.md5(ids+engine+rules).hexdigest()
 	try:
 		pcap = Pcap.select().where(Pcap.md5==filehash).get()
+		os.remove(path)
+		reupload = True
 	except:
-		pass #flash('that file hash is already in the database!')
+		pass
 	try:
-		query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid)
+		query = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(ProcessedPcap.pcap.md5==filehash, ProcessedPcap.runid==runid).get()
 		flash('that file has already been processed with those settings!')
 		return redirect('/output/'+filehash+'/'+runid)
 	except:
