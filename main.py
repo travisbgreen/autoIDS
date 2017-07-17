@@ -49,7 +49,7 @@ app.secret_key = SECRETKEY ## be sure to change this in the config so you can't 
 
 @app.route('/') # main page = upload spot
 def mainpage():
-	return render_template('upload.html',idss=IDSS,rerun=False) # list of the engines available goes into the dropdown in the form
+	return render_template('upload.html',idss=IDSS,engines=ENGINES,rerun=False) # list of the engines available goes into the dropdown in the form
 
 @app.route('/rerun/<filehash>')
 def rerun(filehash):
@@ -58,7 +58,7 @@ def rerun(filehash):
 	except:
 		flash('that file does not exist so it can not be rerun')
 		return redirect('/')
-	return render_template('upload.html',idss=IDSS,rerun=True,rerunhash=filehash)
+	return render_template('upload.html',idss=IDSS,engines=ENGINES,rerun=True,rerunhash=filehash)
 
 @app.route('/upload',methods=['POST']) # post to this actually triggers upload (so it could be done with cURL if you want)
 def upload():
@@ -108,8 +108,9 @@ def upload():
 	runid = hashlib.md5(ids+engine+rules).hexdigest()
 	try:
 		pcap = Pcap.select().where(Pcap.md5==filehash).get()
-		os.remove(path)
-		reupload = True
+		if not reupload:
+			os.remove(path)
+			reupload = True
 	except:
 		pass
 	try:
