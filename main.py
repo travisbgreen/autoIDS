@@ -178,7 +178,7 @@ def logfiledisp(filehash,runid):
 	if data.logpath:
 		filenames = os.listdir(data.logpath)
 		for fn in filenames:
-			if fn in DISPLAYFILES or True: ## disable the 'or True' because its for debugging
+			if not fn in FILEBLACKLIST:
 				fdir = os.path.join(data.logpath,fn)
 				fsize = os.path.getsize(fdir)
 				fd = open(fdir,'r')
