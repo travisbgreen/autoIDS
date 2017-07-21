@@ -10,6 +10,10 @@ parser = argparse.ArgumentParser(description='autoIDSserver setup script, assume
 parser.add_argument('-u','--unprivileged',help='run as unpriv\'d user specified in config.py',action='store_true',required=False)
 args = parser.parse_args()
 
+subprocess.call('sudo apt-get install -y python-pip python-setuptools apache2', shell=True)
+subprocess.call('sudo pip install --upgrade pip flask pygments peewee', shell=True)
+subprocess.call('sed -i \'s/<VirtualHost \*:80>/<VirtualHost \*:81>/g\' /etc/apache2/sites-enabled/000-default.conf', shell=True)
+
 if args.unprivileged:
     try:
         pwd.getpwnam(UNPRIV_USER)
@@ -29,5 +33,6 @@ if not os.path.exists(LOG_FOLDER): # create the folder to hold logs and output m
     if args.unprivileged:
         subprocess.call('chown ' + UNPRIV_USER + ':' + UNPRIV_USER + ' ' + LOG_FOLDER, shell=True)
 if not os.path.exists(DATABASE): # set up the database in UPLOAD_FOLDER if it does not exist
+    subprocess.call('touch ' + DATABASE, shell=True)
     if args.unprivileged:
         subprocess.call('chown ' + UNPRIV_USER + ':' + UNPRIV_USER + ' ' + DATABASE, shell=True)
