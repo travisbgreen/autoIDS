@@ -29,6 +29,7 @@ class ProcessedPcap(Model): # store info about logs of a specific run of a pcap
 	ids = CharField() # ids that is used (like suricata-2.0.6)
 	rules = TextField() # custom rules that are specified
 	status = IntegerField() # in progress, success, failed
+	runtime = FloatField()
 	logpath = CharField() # path to the resulting log files
 	run = IntegerField() # unixtime for when it was run
 	pcap = ForeignKeyField(Pcap, related_name='runs') # relate it to the pcap that it describes

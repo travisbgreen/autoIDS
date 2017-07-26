@@ -15,7 +15,9 @@ def backgroundthread(run): # runs in the background and processes files one at a
 		os.mkdir(logpath) # make a new subdirectory for the logs of this run to be stored in
 		os.chdir(IDSDB_FOLDER) # cd to the path of the IDSDeathBlossom install so all the relative links and imports work properly
 		threadlock.acquire(True) # make sure we don't run these at the same time
+		starttime = time.clock()
 		ret = os.system('''python {IDSDB}/IDSDeathBlossom.py -c {IDSDB}/config/config.yaml -R run -t "{IDS}-{ENGINE}" --pcappath="{PCAP}" --globallogdir={LOGPATH} --glogoverride --reporton=ids,fast'''.format(IDSDB=IDSDB_FOLDER,IDS=run.ids,ENGINE=run.engine,PCAP=run.pcap.filepath,LOGPATH=logpath))  ## --use-custom-rules  --target-opts="all:customrules='.$rulesfile.'"
+		endtime = time.clock()
 		threadlock.release() # this lock only prevents IDSdb from running multiple times at once
 		stat = 1 # success
 		if ret != 0:
@@ -29,6 +31,7 @@ def backgroundthread(run): # runs in the background and processes files one at a
 			pass
 		run.logpath = logpath # set the newly created directory
 		run.status = stat # and the status finalized
+		run.runtime = endtime - starttime
 		run.save() # save databse reference
 		db.close()
 		datalock.release() # allow other threads to write db

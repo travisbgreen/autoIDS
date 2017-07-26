@@ -20,6 +20,9 @@
 				<b>Status</b>
 			</td>
 			<td>
+				<b>Runtime (sec)</b>
+			</td>
+			<td>
 				<b>Hash</b>
 			</td>
 			<td>
@@ -45,6 +48,9 @@
 				{% else %}
 				<span style="color:green;">In progress...</span>
 				{% endif %}
+			</td>
+			<td>
+				{{ file.runtime }}
 			</td>
 			<td>
 				<a href="/output/{{ file.pcap.md5 }}">{{ file.pcap.md5 }}</a>

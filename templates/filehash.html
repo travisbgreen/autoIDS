@@ -36,6 +36,9 @@
 				<b>Status</b>
 			</td>
 			<td>
+				<b>Runtime (sec)</b>
+			</td>
+			<td>
 				<b>Date run</b>
 			</td>
 		</tr>
@@ -58,6 +61,9 @@
 				{% else %}
 				<span style="color:green;">In progress...</span>
 				{% endif %}
+			</td>
+			<td>
+				{{ run.runtime }}
 			</td>
 			<td>
 				{{ run.run }}
