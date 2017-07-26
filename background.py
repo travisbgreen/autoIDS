@@ -1,4 +1,3 @@
-#!/usr/bin/env python2
 from config import *
 import threading, os, time ### TODO: time the operation and save in db
 from peewee import *
