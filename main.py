@@ -36,12 +36,9 @@ class ProcessedPcap(Model): # store info about logs of a specific run of a pcap
 	class Meta:
 		database = db # connect it to the database
 
-db.connect()
-try:
+with db.transaction():
 	db.create_tables([Pcap,ProcessedPcap]) # make the tables that we just described
-except OperationalError: # if tables already exist, this will error
-	pass # just continue
-db.close()
+
 
 app = Flask(__name__) # make the flask
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER ## we want to save all the pcaps so this is not a tmp folder in the default config
@@ -53,21 +50,16 @@ def mainpage():
 
 @app.route('/rerun/<filehash>') # page to re-run a file without reuploading it
 def rerun(filehash):
-	try:
-		reruninfo = Pcap.select().where(Pcap.md5==filehash).get() # make sure the file exists
-	except:
-		flash('that file does not exist so it can not be rerun') # if it does not...
-		return redirect('/')
+	with db.transaction():
+		try:
+			reruninfo = Pcap.select().where(Pcap.md5==filehash).get() # make sure the file exists
+		except:
+			flash('that file does not exist so it can not be rerun') # if it does not...
+			return redirect('/')
 	return render_template('upload.html',idss=IDSS,engines=ENGINES,rerun=True,rerunhash=filehash) # tell the main page that this is a re-run file
 
 @app.route('/upload',methods=['POST']) # post to this actually triggers upload (so it could be done with cURL if you want)
 def upload():
-	global datalock # for exclusive access to the database
-	try:
-		db.connect()
-	except: # might error if it was not closed properly
-		pass
-
 	allowed = False # series of checks determine if the upload is allowed
 	reupload = False # more checks determine if the file has already been uploaded
 	if request.files:
@@ -104,7 +96,6 @@ def upload():
 	private = request.form.get('private',False) # checkbox that makes the file private
 	engine = request.form.get('engine','etopen-all') # ruleset selection
 	rules = request.form.get('rules','') # textbox that carries custom rules
-	datalock.acquire() # we're writing to the db so we need to get exclusive access
 	runid = hashlib.md5(ids+engine+rules).hexdigest() # make a run id that identifies the different runs that each file may have
 	try:
 		pcap = Pcap.select().where(Pcap.md5==filehash).get() # check to see if there is any pcap with the same hash as the one that was uploaded
@@ -119,11 +110,11 @@ def upload():
 		return redirect('/output/'+filehash+'/'+runid) # send the user to the page where the results are for that run
 	except: # if the query fails, ignore
 		pass
-	if not reupload: # make a new entry in the pcap database if it's a new file (pcap is set before if it is a reupload/rerun)
-		pcap = Pcap.create(md5=filehash,filename=filename,filepath=path,uploaded=time.time(),private=private) # create entry
-	run = ProcessedPcap.create(runid=runid,pcap=pcap,ids=ids,engine=engine,rules=rules,status=0,logpath='',run=time.time()) # create a run entry in the database
-	db.close()
-	datalock.release() # release exclusive lock
+	with datalock:
+		with db.transaction():
+			if not reupload: # make a new entry in the pcap database if it's a new file (pcap is set before if it is a reupload/rerun)
+				pcap = Pcap.create(md5=filehash,filename=filename,filepath=path,uploaded=time.time(),private=private) # create entry
+			run = ProcessedPcap.create(runid=runid,pcap=pcap,ids=ids,engine=engine,rules=rules,status=0,logpath='',run=time.time()) # create a run entry in the database
 	process(run) # opens a new thread to process the pcap
 	flash('processing pcap in progress... wait a little while and then refresh') # give the user a message about the status
 	if private:
@@ -133,14 +124,9 @@ def upload():
 @app.route('/output') # displays a list of the pcaps submitted to the system
 def logfilelist():
 	page = int(request.args.get('page',1)) # can use ?page=2 or something to paginate the system (rudimentary navigation on the page already)
-	try:
-		db.connect() # could error if already connected
-	except:
-		pass
-	try:
+	files = []
+	with db.transaction():
 		files = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(Pcap.private==False).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE) # get the most recent 40 runs that are public
-	except:
-		files = [] # if the query finds no files, it can error
 	nextpage = len(files) >= PERPAGE # if the list is the same length as the page size, could mean that there is another page (not the best way to do this i'm sure)
 	db.close()
 	return render_template('listing.html',files=files,page=page,nextpage=nextpage) # pass in the page number and the file listing
@@ -148,35 +134,26 @@ def logfilelist():
 @app.route('/output/<filehash>')
 def logfileselect(filehash): # lists all the logfiles associated with a specific pcap
 	page = int(request.args.get('page',1)) # can use ?page=2 or something to paginate the system (rudimentary navigation on the page already)
-	try:
-		db.connect() # could error if already connected
-	except:
-		pass
-	try:
-		ofile = Pcap.select().where(Pcap.md5==filehash).get() # get info about the original file to display at the top of the page
-	except:
-		flash('that file does not exist') # if there's no pcap with that hash, redirect to the listing
-		return redirect('/output')
-	try:
+	runs = []
+	with db.transaction():
+		try:
+			ofile = Pcap.select().where(Pcap.md5==filehash).get() # get info about the original file to display at the top of the page
+		except:
+			flash('that file does not exist') # if there's no pcap with that hash, redirect to the listing
+			return redirect('/output')
 		runs = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(Pcap.md5==filehash).order_by(ProcessedPcap.run.desc()).paginate(page,PERPAGE) # get all the runs with a specific pcap file hash
-	except:
-		runs = [] # if error, empty listing
 	nextpage = len(runs) >= PERPAGE # same pagination detection
 	db.close()
 	return render_template('filehash.html',file=ofile,runs=runs,page=page,nextpage=nextpage) # pass file info and page info
 
 @app.route('/output/<filehash>/<runid>') # displays the logs of a single file
 def logfiledisp(filehash,runid):
-	try:
-		db.connect() # could error if already connected
-	except:
-		pass # get the database
-	try:
-		data = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(Pcap.md5==filehash, ProcessedPcap.runid==runid).get() # get info for a specific run
-	except:
-		flash('that run or file does not exist') # if there's no pcap with that hash, redirect to the listing
-		return redirect('/output')
-	db.close() # no longer needed
+	with db.transaction():
+		try:
+			data = ProcessedPcap.select(ProcessedPcap,Pcap).join(Pcap).where(Pcap.md5==filehash, ProcessedPcap.runid==runid).get() # get info for a specific run
+		except:
+			flash('that run or file does not exist') # if there's no pcap with that hash, redirect to the listing
+			return redirect('/output')
 	files = [] # list that holds file info that is passed to the page template
 	if data.logpath: # if the file is in progress, there will not be any log path stored
 		filenames = os.listdir(data.logpath) # get the filenames that are in the logpath
