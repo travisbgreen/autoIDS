@@ -54,8 +54,16 @@ def backgroundthread(run): # runs in the background and processes files one at a
 		run.save() # save databse reference
 		db.close()
 		datalock.release() # allow other threads to write db
-	except Exception as e: ##TODO: maybe set status to fail on error
-		print e
+	except Exception as e:
+		datalock.acquire() # different lock for database operations (shared with main.py)
+		try:
+			db.connect() # sometimes it will error if it is already connected
+		except:
+			pass
+		run.status = -1 # errored
+		run.save() # save databse reference
+		db.close()
+		datalock.release() # allow other threads to write db
 
 def process(info): # start the thread, passing the file info to it
 	bthread = threading.Thread(target=backgroundthread,args=(info,)) # pass in database reference
