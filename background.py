@@ -1,14 +1,11 @@
 from config import *
-import threading, os, time, sys, tempfile
+import subprocess, threading, os, time, sys, tempfile
 from peewee import *
 
 db = SqliteDatabase(DATABASE, threadlocals=True)
 
 threadlock = threading.Lock() # make sure we don't have any threading issues
 datalock = threading.Lock()
-
-sys.path.append(IDSDB_FOLDER)
-from IDSDeathBlossom import run as run_ids
 
 def backgroundthread(run): # runs in the background and processes files one at a time
 	try:
@@ -17,22 +14,18 @@ def backgroundthread(run): # runs in the background and processes files one at a
 		os.mkdir(logpath) # make a new subdirectory for the logs of this run to be stored in
 		os.chdir(IDSDB_FOLDER) # cd to the path of the IDSDeathBlossom install so all the relative links and imports work properly
 		rulesfile = tempfile.NamedTemporaryFile(delete=True) # make a temporary file for the rules if it has them
-		class temp_config: # passed to IDSDB handler
-			runmode = 'run' # what else would you want to do?
-			config = '{IDSDB}/config/config.yaml'.format(IDSDB=IDSDB_FOLDER) # default config
-			targets = '{IDS}-{ENGINE}'.format(IDS=run.ids,ENGINE=run.engine) # set the ids and ruleset
-			pcappath = run.pcap.filepath # path to the pcap to be executed
-			globallogdir = logpath # point to our special logging path
-			glogoverride = True # i guess this means send all logs to that folder
-			reporton = 'ids,fast' # things to report about
+		opts = ["python", "{IDSDB}/IDSDeathBlossom.py".format(IDSDB=IDSDB_FOLDER),
+		   "-c", "{IDSDB}/config/config.yaml".format(IDSDB=IDSDB_FOLDER), "-R", "run",
+		   "-t", "'{IDS}-{ENGINE}'".format(IDS=run.ids,ENGINE=run.engine),
+		   "--pcappath='{PCAP}'".format(PCAP=run.pcap.filepath), "--globallogdir={LOGPATH}".format(LOGPATH=logpath),
+		   "--glogoverride", "--reporton=ids,fast"]
 		if run.engine == 'test-test': # custom rules
 			rulesfile.write(run.rules) # write the rules to our temp file
 			rulesfile.flush() # save without closing because that deletes the file
-			temp_config.usecustomrules = True # tell it to use our rules
-			temp_config.target-opts = 'all:customrules="{RULEFILE}"'.format(rulesfile.name) # point it at our file
+			opts += ["--use-custom-rules",  "--target-opts='all:customrules=\"{RULEFILE}\"'".format(RULEFILE=rulesfile.name)]
 		starttime = time.clock()
 		with threadlock:
-			ret = run_ids(temp_config) # runs the program directly without bash
+			ret = subprocess.call(opts) # doesn't use a shell apparently
 		endtime = time.clock()
 		rulesfile.close() # delete the temp file
 		stat = 1 # success
