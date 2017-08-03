@@ -174,7 +174,7 @@ def logfiledisp(filehash,runid):
 				if raw.startswith('{'): # guess json files
 					lexer = get_lexer_by_name('json')
 				else:
-					lexer = get_lexer_by_name('makefile') # otherwise, use something that looks ok on TSV and other random stuff
+					lexer = get_lexer_by_name('irc') # otherwise, use something that looks ok on TSV and other random stuff
 				formatter = HtmlFormatter(linenos=True) # format to html
 				formatted = highlight(raw,lexer,formatter) # run the syntax highlighing
 				files.append((fn,formatted,trunc,fsize,dllink)) # append info to list

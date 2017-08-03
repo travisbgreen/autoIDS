@@ -31,13 +31,15 @@
 		<td>
 			<b>Runtime: </b>{{ data.runtime }} seconds
 		</td>
-		<td>
+	</tr>
+	<tr>
+		<td colspan="2">
 			<b>Hash: </b><a href="/output/{{ data.pcap.md5 }}">{{ data.pcap.md5 }}</a>
 		</td>
 		<td>
 			<b>Uploaded: </b>{{ data.run }}
 		</td>
-		<td>
+		<td colspan="2">
 			<a href="/rerun/{{ data.pcap.md5 }}">Re-run this file with different settings</a>
 		</td>
 	</tr>
