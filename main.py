@@ -37,7 +37,10 @@ class ProcessedPcap(Model): # store info about logs of a specific run of a pcap
 		database = db # connect it to the database
 
 with db.transaction():
-	db.create_tables([Pcap,ProcessedPcap]) # make the tables that we just described
+	try:
+		db.create_tables([Pcap,ProcessedPcap]) # make the tables that we just described
+	except:
+		pass
 
 
 app = Flask(__name__) # make the flask
@@ -114,7 +117,7 @@ def upload():
 		with db.transaction():
 			if not reupload: # make a new entry in the pcap database if it's a new file (pcap is set before if it is a reupload/rerun)
 				pcap = Pcap.create(md5=filehash,filename=filename,filepath=path,uploaded=time.time(),private=private) # create entry
-			run = ProcessedPcap.create(runid=runid,pcap=pcap,ids=ids,engine=engine,rules=rules,status=0,logpath='',run=time.time()) # create a run entry in the database
+			run = ProcessedPcap.create(runid=runid,pcap=pcap,ids=ids,engine=engine,rules=rules,status=0,logpath='',run=time.time(),runtime=0) # create a run entry in the database
 	process(run) # opens a new thread to process the pcap
 	flash('processing pcap in progress... wait a little while and then refresh') # give the user a message about the status
 	if private:
