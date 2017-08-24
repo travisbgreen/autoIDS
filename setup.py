@@ -10,9 +10,11 @@ parser = argparse.ArgumentParser(description='autoIDSserver setup script, assume
 parser.add_argument('-u','--unprivileged',help='run as unpriv\'d user specified in config.py',action='store_true',required=False)
 args = parser.parse_args()
 
-subprocess.call('sudo apt-get install -y python-pip python-setuptools apache2', shell=True)
-subprocess.call('sudo pip install --upgrade pip flask pygments peewee', shell=True)
+subprocess.call('apt-get install -y python-pip python-setuptools apache2 authbind', shell=True)
+subprocess.call('pip install --upgrade pip flask pygments peewee', shell=True)
 subprocess.call('sed -i \'s/<VirtualHost \*:80>/<VirtualHost \*:81>/g\' /etc/apache2/sites-enabled/000-default.conf', shell=True)
+subprocess.call('sed -i \'s/Listen 80/Listen 81/g\' /etc/apache2/ports.conf', shell=True)
+subprocess.call('service apache2 restart', shell=True)
 
 if args.unprivileged:
     try:
@@ -21,6 +23,9 @@ if args.unprivileged:
         print 'UNPRIV_USER does not exist, creating...'
         subprocess.call('useradd -s /bin/false ' + UNPRIV_USER, shell=True)
         subprocess.call('echo \'' + UNPRIV_USER + ':' + UNPRIV_PASS + '\' | sudo chpasswd ', shell=True)
+	subprocess.call('touch /etc/authbind/byport/80', shell=True)
+	subprocess.call('chown autoids:autoids /etc/authbind/byport/80', shell=True)
+	subprocess.call('chmod +x /etc/authbind/byport/80', shell=True)
 else:
     input('Warning: is not suggested to run as unpriv user, ctl+c and restart with -u? press enter to continue without')
 
