@@ -1,3 +1,2 @@
 #!/bin/bash
-
-sudo -u autoids FLASK_APP=/opt/autoIDSserver/main.py flask run --port=5000 --host=0.0.0.0
+FLASK_APP=/opt/autoIDSserver/main.py flask run --port=5000 --host=0.0.0.0

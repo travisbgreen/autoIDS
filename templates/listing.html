@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Logfiles{% endblock %}
 {% block body %}
-<p>
-	List of pcap files that have been processed.
-</p>
-<p>
-	<table>
+
+	<div class="page-header">
+		<h1>Files</h1>
+	</div>
+	<div class="row">
+		<div class="col-md-6">
+	<table class="table">
+		<thead>
 		<tr>
 			<td>
 				<b>Filename</b>
@@ -28,7 +31,9 @@
 			<td>
 				<b>Uploaded</b>
 			</td>
+		</thead>
 		</tr>
+		<tbody>
 		{% for file in files %}
 		<tr>
 			<td>
@@ -59,6 +64,7 @@
 				{{ file.run }}
 			</td>
 		</tr>
+	</tbody>
 		{% endfor %}
 	</table>
 </p>

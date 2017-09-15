@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Upload pcap{% endblock %}
 {% block body %}
+
 <p>
-	Upload a pcap here to be processed. Warning: some options can cause long run times.
+	Warning: some options can cause long run times.
 </p>
 <form method="post" action="/upload" enctype="multipart/form-data">
 	{% if rerun %}
@@ -30,7 +31,9 @@
 	{% if not rerun %}
 	<input type="checkbox" name="private" />Make Private<br />
 	{% endif %}
-	<input type="submit" value="Process it!" />
+
+	<button type="submit" class="btn btn-lg btn-primary"/>Process PCAP</button>
+
 </form>
 <script type="text/javascript">
 $("#custom").hide();
