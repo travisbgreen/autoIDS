@@ -2,7 +2,7 @@
 {% block title %}Upload pcap{% endblock %}
 {% block body %}
 <p>
-	Upload a pcap here to be processed.
+	Upload a pcap here to be processed. Warning: some options can cause long run times.
 </p>
 <form method="post" action="/upload" enctype="multipart/form-data">
 	{% if rerun %}

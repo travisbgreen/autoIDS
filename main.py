@@ -1,9 +1,11 @@
-from flask import Flask, request, redirect, url_for, render_template, flash
-from werkzeug.utils import secure_filename
 import os
 import Queue
-from peewee import *
 import time
+import logging
+
+from flask import Flask, request, redirect, url_for, render_template, flash
+from werkzeug.utils import secure_filename
+from peewee import *
 from config import *
 from util import *
 from background import process,datalock
@@ -11,7 +13,7 @@ from pygments import highlight
 from pygments.lexers import guess_lexer, get_lexer_by_name
 from pygments.formatters import HtmlFormatter
 
-### database stuff here for now.
+logging.basicConfig(filename='autoids.log', level=logging.INFO)
 db = SqliteDatabase(DATABASE, threadlocals=True) # peewee reference to the database
 
 class Pcap(Model): # store info about a specific pcap
@@ -41,7 +43,6 @@ with db.transaction():
 		db.create_tables([Pcap,ProcessedPcap]) # make the tables that we just described
 	except:
 		pass
-
 
 app = Flask(__name__) # make the flask
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER ## we want to save all the pcaps so this is not a tmp folder in the default config
@@ -83,7 +84,7 @@ def upload():
 	elif 'rerunhash' in request.form: # not a file upload, but a re-run via file hash
 		try:
 			filehash = request.form.get('rerunhash') # get the hash from the form
-			print filehash # for debugging
+			logging.info("running " + filehash)
 			reruninfo = Pcap.select().where(Pcap.md5==filehash).get() # check if the file exists
 			filename = reruninfo.filename # get the info from the database
 			path = reruninfo.filepath
@@ -95,11 +96,12 @@ def upload():
 		flash('unhelpful error message') # because there are several reasons the upload would be denied, not very helpful
 		return redirect('/')
 
-	ids = request.form.get('ids','suricata-2.0.6') # gets the selected engine from the dropdown in the form, defaulting to suri 206
+	ids = request.form.get('ids','suricata-4.0.0') # gets the selected engine from the dropdown in the form, defaulting to suri 206
 	private = request.form.get('private',False) # checkbox that makes the file private
 	engine = request.form.get('engine','etopen-all') # ruleset selection
 	rules = request.form.get('rules','') # textbox that carries custom rules
 	runid = hashlib.md5(ids+engine+rules).hexdigest() # make a run id that identifies the different runs that each file may have
+
 	try:
 		pcap = Pcap.select().where(Pcap.md5==filehash).get() # check to see if there is any pcap with the same hash as the one that was uploaded
 		if pcap and not reupload: # if there is, but it's not marked as a reupload,
@@ -182,7 +184,7 @@ def logfiledisp(filehash,runid):
 	return render_template('logfile.html',css=css,data=data,files=files) # pass in the log list
 
 if __name__ == '__main__': # debugging mode - just run the py file
-	#app.debug = True
+	app.debug = True
 	app.host = '0.0.0.0'
-	app.port = 19943 # does not work in the new flask
+	#app.port = 19943 # does not work in the new flask
 	app.run()

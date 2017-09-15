@@ -26,6 +26,7 @@ if args.unprivileged:
 	subprocess.call('touch /etc/authbind/byport/80', shell=True)
 	subprocess.call('chown autoids:autoids /etc/authbind/byport/80', shell=True)
 	subprocess.call('chmod +x /etc/authbind/byport/80', shell=True)
+	subprocess.call('chown autoids:autoids . -R', shell=True)
 else:
     input('Warning: is not suggested to run as unpriv user, ctl+c and restart with -u? press enter to continue without')
 
