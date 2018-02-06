@@ -2,7 +2,7 @@ from config import *
 import subprocess, threading, os, time, sys, tempfile
 from peewee import *
 
-db = SqliteDatabase(DATABASE, threadlocals=True)
+db = SqliteDatabase(DATABASE)
 
 threadlock = threading.Lock() # make sure we don't have any threading issues
 datalock = threading.Lock()
@@ -25,6 +25,7 @@ def backgroundthread(run): # runs in the background and processes files one at a
 			opts += ["--use-custom-rules",  "--target-opts=all:customrules={RULEFILE}".format(RULEFILE=rulesfile.name)]
 		starttime = time.time()
 		with threadlock:
+			print("".join(opts))
 			ret = subprocess.call(opts) # doesn't use a shell apparently
 		endtime = time.time()
 		rulesfile.close() # delete the temp file

@@ -13,8 +13,8 @@ from pygments import highlight
 from pygments.lexers import guess_lexer, get_lexer_by_name
 from pygments.formatters import HtmlFormatter
 
-logging.basicConfig(filename='autoids.log', level=logging.INFO)
-db = SqliteDatabase(DATABASE, threadlocals=True) # peewee reference to the database
+logging.basicConfig(filename='autoids.log', level=logging.DEBUG)
+db = SqliteDatabase(DATABASE) # peewee reference to the database
 
 class Pcap(Model): # store info about a specific pcap
 	md5 = CharField() # file hash
@@ -62,7 +62,7 @@ def rerun(filehash):
 			return redirect('/')
 	return render_template('upload.html',idss=IDSS,engines=ENGINES,rerun=True,rerunhash=filehash) # tell the main page that this is a re-run file
 
-@app.route('/upload',methods=['POST']) # post to this actually triggers upload (so it could be done with cURL if you want)
+@app.route('/upload',methods=['POST']) # post to this triggers upload (so it could be done with cURL)
 def upload():
 	allowed = False # series of checks determine if the upload is allowed
 	reupload = False # more checks determine if the file has already been uploaded
@@ -186,5 +186,4 @@ def logfiledisp(filehash,runid):
 if __name__ == '__main__': # debugging mode - just run the py file
 	app.debug = True
 	app.host = '0.0.0.0'
-	#app.port = 19943 # does not work in the new flask
 	app.run()

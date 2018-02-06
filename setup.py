@@ -28,7 +28,7 @@ if args.unprivileged:
 	subprocess.call('chmod +x /etc/authbind/byport/80', shell=True)
 	subprocess.call('chown autoids:autoids . -R', shell=True)
 else:
-    input('Warning: is not suggested to run as unpriv user, ctl+c and restart with -u? press enter to continue without')
+    print('Warning: is not suggested to run as unpriv user, ctl+c and restart with -u? press enter to continue without')
 
 if not os.path.exists(UPLOAD_FOLDER): # create the folder to upload the files into if it does not exist
     os.mkdir(UPLOAD_FOLDER)
