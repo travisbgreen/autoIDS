@@ -47,6 +47,9 @@ with db.transaction():
 app = Flask(__name__) # make the flask
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER ## we want to save all the pcaps so this is not a tmp folder in the default config
 app.secret_key = SECRETKEY ## be sure to change this in the config so you can't be pwn3d by 1337 h4x0rz
+app.threaded = True
+app.debug = True
+app.host = '0.0.0.0'
 
 @app.route('/') # main page = upload spot
 def mainpage():
@@ -184,6 +187,7 @@ def logfiledisp(filehash,runid):
 	return render_template('logfile.html',css=css,data=data,files=files) # pass in the log list
 
 if __name__ == '__main__': # debugging mode - just run the py file
+	app.threaded = True
 	app.debug = True
 	app.host = '0.0.0.0'
 	app.run()
