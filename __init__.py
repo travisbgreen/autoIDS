@@ -13,8 +13,11 @@ from pygments import highlight
 from pygments.lexers import guess_lexer, get_lexer_by_name
 from pygments.formatters import HtmlFormatter
 
-logging.basicConfig(filename='autoids.log', level=logging.DEBUG)
-db = SqliteDatabase(DATABASE) # peewee reference to the database
+db = SqliteDatabase(DATABASE)
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.secret_key = SECRETKEY ## be sure to change this in the config so you can't be pwn3d by 1337 h4x0rz
+app.threaded = True
 
 class Pcap(Model): # store info about a specific pcap
 	md5 = CharField() # file hash
@@ -43,13 +46,6 @@ with db.transaction():
 		db.create_tables([Pcap,ProcessedPcap]) # make the tables that we just described
 	except:
 		pass
-
-app = Flask(__name__) # make the flask
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER ## we want to save all the pcaps so this is not a tmp folder in the default config
-app.secret_key = SECRETKEY ## be sure to change this in the config so you can't be pwn3d by 1337 h4x0rz
-app.threaded = True
-app.debug = True
-app.host = '0.0.0.0'
 
 @app.route('/') # main page = upload spot
 def mainpage():
@@ -186,8 +182,5 @@ def logfiledisp(filehash,runid):
 	css = HtmlFormatter().get_style_defs('.highlight') # get the css to pass in (could probably make this a bit better by putting it in a static file)
 	return render_template('logfile.html',css=css,data=data,files=files) # pass in the log list
 
-if __name__ == '__main__': # debugging mode - just run the py file
-	app.threaded = True
-	app.debug = True
-	app.host = '0.0.0.0'
+if __name__ == '__main__':
 	app.run()
