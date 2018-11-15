@@ -21,4 +21,4 @@ PERPAGE = 40 # files displayed per page for the lists
 FILEBLACKLIST = ['IDSDeathBlossom.py.log_'] # filenames that are not displayed by the logfile viewer
 FILETRUNCATE = 16384  # truncate after first 16kb of long files
 STATICHOST = 'http://autoids.net:81/' # url to the apache server that hosts the logfiles
-SECRETKEY = 'jasfpqurvpwhgq9pw34rn3qy42996h7d6gf8h5j4kj5zhg679s08df7g0d8fg6hd89sfg8767b8v69b87n6cvb87n6cvnd5987erytwejkrh252mbn52mb5l2l54j2l50nvu3w754yt237098572307509878twe0rt98we70rt89gf7hdfg7h089fgh7df098h' # for session cookie encryption
+SECRETKEY = 'redacted' # for session cookie encryption
