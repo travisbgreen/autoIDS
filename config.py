@@ -1,7 +1,7 @@
 import os
 
 UNPRIV_USER = 'autoids' # username and password for the unprivelaged user that this is run as
-UNPRIV_PASS = '495f4bf2d84e6db716a923f209bed881'
+UNPRIV_PASS = 'redacted'
 UPLOAD_FOLDER = '/var/pcap' # pcap files are uploaded here
 LOG_FOLDER = '/var/www/html' # logs are put here in their own folders
 IDSDB_FOLDER = '/opt/IDSDeathBlossom' # IDSDeathBlossom installation
